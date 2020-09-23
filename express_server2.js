@@ -3,6 +3,16 @@ const app = express();
 const path = require("path");
 const request = require("request");
 
+//MYSQL 커넥터 추가
+var mysql = require("mysql");
+var connection = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "1234", //본인 비밀번호
+    database: "fintech_local",
+});
+
+connection.connect();
 app.set("views", __dirname + "/views"); // ejs를 사용하기 위한 디렉토리 설정
 app.set("view engine", "ejs"); // ejs를 사용하기 위한 뷰 엔진 설정
 
@@ -37,12 +47,30 @@ app.get("/authResult", function (req, res) {
             //#자기 키로 시크릿 변경
         },
     };
-    request("", function (error, response, body) {
-        console.log(body);
-        var accessRequestResult = JSON.parse(body);
+    request(option, function (error, response, body) {
+        var accessRequestResult = JSON.parse(body); //JSON 오브젝트를 JS 오브젝트로 변경
         console.log(accessRequestResult);
         res.render("resultChild", { data: accessRequestResult });
     });
 });
 
+app.post("/signup", function (req, res) {
+    var userName = req.body.userName;
+    var userEmail = req.body.userEmail;
+    var userPassword = req.body.userPassword;
+    var userAccessToken = req.body.userAccessToken;
+    var userRefreshToken = req.body.userRefreshToken;
+    var userSeqNo = req.body.userSeqNo;
+    console.log(userName, userEmail, userPassword);
+    connection.query(
+        "INSERT INTO `user`(`name`,`email`,`password`,`accesstoken`,`refreshtoken`,`userseqno`)VALUES(?,?,?,?,?,?);",
+        [userName, userEmail, userPassword, userAccessToken, userRefreshToken, userSeqNo],
+        function (error, results, fields) {
+            if (error) throw error;
+            else {
+                res.json(1);
+            }
+        }
+    );
+});
 app.listen(3000);
